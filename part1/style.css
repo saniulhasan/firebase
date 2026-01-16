@@ -1,0 +1,60 @@
+
+body{
+   font-family: 'Times New Roman', Times, serif;
+}
+
+
+.form{
+   width: 300px;
+   margin: 0 auto;
+}
+
+.form input[type="file"]{
+   display: none;
+}
+
+
+.upload_UI {
+    width: 100%;
+    margin-top: 140px;
+}
+.upload_UI label{
+   width: 100%;
+   display: block;
+   height: 50px;
+   border: 2px solid;
+   border-style: dashed;
+   text-align: center;
+   line-height: 50px;
+   font-size: 25px;
+   cursor: pointer;
+}
+.upload_UI label:hover{
+   background: #f1f1f1;
+}
+
+.progress_per {
+    margin-top: 20px;
+    display: block;
+    text-align: center;
+ 
+    background: #107f16;
+    color: #f1f1f1;
+    font-size: 14px;
+}
+
+.upload_UI  button{
+   width: 100%;
+   margin-top: 20px;
+   padding: 10px 0;
+   background: #111;
+   color: #fff;
+   font-size: 18px;
+   border: 1px solid #111;
+   cursor: pointer;
+   transition: .4s ease-in-out;
+}
+.upload_UI  button:hover{
+   background: transparent;
+   color: #111;
+}
