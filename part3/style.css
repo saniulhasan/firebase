@@ -146,3 +146,55 @@ button:hover{
     animation:fadeOut 7s forwards;
 
 }
+
+/* Add these styles to your existing style.css */
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  background-color: #ffffff;
+  color: #757575;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.google-btn:hover {
+  background-color: #f7f7f7;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.google-btn:active {
+  background-color: #eeeeee;
+}
+
+.google-btn i {
+  margin-right: 10px;
+  font-size: 18px;
+  color: #4285F4;
+}
+
+/* Update the icons container */
+.icons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+/* Remove or comment out the old icon styles if needed */
+/*
+.icons i {
+  margin: 0 10px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #4A154B;
+}
+*/

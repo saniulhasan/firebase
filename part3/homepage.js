@@ -4,13 +4,13 @@ import { getFirestore, getDoc, doc } from "https://www.gstatic.com/firebasejs/10
 
 // Use the SAME Firebase config as firebaseauth.js
 const firebaseConfig = {
-  apiKey: "AIzaSyCgDEWC1U7C-A5ylFS5qkeADeak1I92Vj4",
-  authDomain: "log-in-423de.firebaseapp.com",
-  projectId: "log-in-423de",
-  storageBucket: "log-in-423de.firebasestorage.app",
-  messagingSenderId: "872948931505",
-  appId: "1:872948931505:web:129da55a940c9e70353b90",
-  measurementId: "G-DQT0N7GZ12"
+ apiKey: "AIzaSyB397Kx3mhC3xkSUPA5Tttd79S1bu8rt2Y",
+  authDomain: "newlog-177ff.firebaseapp.com",
+  projectId: "newlog-177ff",
+  storageBucket: "newlog-177ff.firebasestorage.app",
+  messagingSenderId: "754206413710",
+  appId: "1:754206413710:web:1890640ad0c7e429788adf",
+  measurementId: "G-WDGHV3ER7W"
 };
 
 // Initialize Firebase
@@ -43,6 +43,8 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+// In your homepage.js, update the loadUserData function:
+
 function loadUserData(userId) {
   console.log("Loading user data for ID:", userId);
   
@@ -56,13 +58,18 @@ function loadUserData(userId) {
         
         // Display user data
         if (document.getElementById('loggedUserFName')) {
-          document.getElementById('loggedUserFName').innerText = userData.firstName || "Not set";
+          document.getElementById('loggedUserFName').innerText = userData.firstName || "Google User";
         }
         if (document.getElementById('loggedUserLName')) {
-          document.getElementById('loggedUserLName').innerText = userData.lastName || "Not set";
+          document.getElementById('loggedUserLName').innerText = userData.lastName || "";
         }
         if (document.getElementById('loggedUserEmail')) {
-          document.getElementById('loggedUserEmail').innerText = userData.email || "Not set";
+          document.getElementById('loggedUserEmail').innerText = userData.email || "Google Account";
+        }
+        
+        // Optional: Display profile picture for Google users
+        if (userData.photoURL && document.getElementById('userProfilePic')) {
+          document.getElementById('userProfilePic').src = userData.photoURL;
         }
         
         // Also update localStorage with current user ID

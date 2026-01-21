@@ -1,22 +1,29 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
 import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
 // Use the SAME Firebase config as homepage.js
 const firebaseConfig = {
-  apiKey: "AIzaSyCgDEWC1U7C-A5ylFS5qkeADeak1I92Vj4",
-  authDomain: "log-in-423de.firebaseapp.com",
-  projectId: "log-in-423de",
-  storageBucket: "log-in-423de.firebasestorage.app",
-  messagingSenderId: "872948931505",
-  appId: "1:872948931505:web:129da55a940c9e70353b90",
-  measurementId: "G-DQT0N7GZ12"
+  apiKey: "AIzaSyB397Kx3mhC3xkSUPA5Tttd79S1bu8rt2Y",
+  authDomain: "newlog-177ff.firebaseapp.com",
+  projectId: "newlog-177ff",
+  storageBucket: "newlog-177ff.firebasestorage.app",
+  messagingSenderId: "754206413710",
+  appId: "1:754206413710:web:1890640ad0c7e429788adf",
+  measurementId: "G-WDGHV3ER7W"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
 
 function showMessage(message, divId) {
   const messageDiv = document.getElementById(divId);
@@ -30,7 +37,72 @@ function showMessage(message, divId) {
   }
 }
 
-// Sign Up Functionality
+// Function to handle Google Sign In/Sign Up
+async function signInWithGoogle() {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    
+    // Extract user information from Google
+    const userData = {
+      email: user.email,
+      firstName: user.displayName?.split(' ')[0] || "Google",
+      lastName: user.displayName?.split(' ')[1] || "User",
+      photoURL: user.photoURL,
+      createdAt: new Date().toISOString(),
+      provider: "google"
+    };
+    
+    // Save user data to Firestore
+    const docRef = doc(db, "users", user.uid);
+    await setDoc(docRef, userData, { merge: true });
+    
+    showMessage('Google login successful!', 'signInMessage');
+    
+    // Store user ID in localStorage
+    localStorage.setItem('loggedInUserId', user.uid);
+    console.log("Google user logged in with ID:", user.uid);
+    
+    // Redirect to homepage
+    setTimeout(() => {
+      window.location.href = 'homepage.html';
+    }, 1000);
+    
+  } catch (error) {
+    console.error("Google sign in error:", error);
+    
+    const errorCode = error.code;
+    if (errorCode === 'auth/popup-closed-by-user') {
+      showMessage('Sign in cancelled', 'signInMessage');
+    } else if (errorCode === 'auth/popup-blocked') {
+      showMessage('Popup was blocked. Please allow popups for this site.', 'signInMessage');
+    } else if (errorCode === 'auth/unauthorized-domain') {
+      showMessage('This domain is not authorized. Please contact support.', 'signInMessage');
+    } else {
+      showMessage('Google sign in failed: ' + error.message, 'signInMessage');
+    }
+  }
+}
+
+// Google Sign In Button Event Listeners
+const googleSignInBtn = document.getElementById('googleSignIn');
+const googleSignUpBtn = document.getElementById('googleSignUp');
+
+if (googleSignInBtn) {
+  googleSignInBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    signInWithGoogle();
+  });
+}
+
+if (googleSignUpBtn) {
+  googleSignUpBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    signInWithGoogle();
+  });
+}
+
+// Sign Up Functionality (email/password)
 const signUp = document.getElementById('submitSignUp');
 if (signUp) {
   signUp.addEventListener('click', (event) => {
@@ -48,7 +120,8 @@ if (signUp) {
           email: email,
           firstName: firstName,
           lastName: lastName,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          provider: "email"
         };
         
         showMessage('Account Created Successfully', 'signUpMessage');
@@ -84,7 +157,7 @@ if (signUp) {
   });
 }
 
-// Sign In Functionality
+// Sign In Functionality (email/password)
 const signIn = document.getElementById('submitSignIn');
 if (signIn) {
   signIn.addEventListener('click', (event) => {
