@@ -25,6 +25,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
+// Admin email configuration
+const ADMIN_EMAIL = "saniulhasan23@gmail.com";
+
 function showMessage(message, divId) {
   const messageDiv = document.getElementById(divId);
   if (messageDiv) {
@@ -35,6 +38,13 @@ function showMessage(message, divId) {
       messageDiv.style.opacity = 0;
     }, 5000);
   }
+}
+
+// Function to determine redirect URL based on user email
+function getRedirectUrl(userEmail) {
+  return userEmail.toLowerCase() === ADMIN_EMAIL.toLowerCase() 
+    ? 'admin.html' 
+    : 'homepage.html';
 }
 
 // Function to handle Google Sign In/Sign Up
@@ -63,9 +73,12 @@ async function signInWithGoogle() {
     localStorage.setItem('loggedInUserId', user.uid);
     console.log("Google user logged in with ID:", user.uid);
     
-    // Redirect to homepage
+    // Determine redirect URL based on email
+    const redirectUrl = getRedirectUrl(user.email);
+    
+    // Redirect to appropriate page
     setTimeout(() => {
-      window.location.href = 'homepage.html';
+      window.location.href = redirectUrl;
     }, 1000);
     
   } catch (error) {
@@ -133,8 +146,12 @@ if (signUp) {
             console.log("User data saved to Firestore with ID:", user.uid);
             // Store user ID in localStorage
             localStorage.setItem('loggedInUserId', user.uid);
-            // Redirect to homepage
-            window.location.href = 'homepage.html';
+            
+            // Determine redirect URL based on email
+            const redirectUrl = getRedirectUrl(email);
+            
+            // Redirect to appropriate page
+            window.location.href = redirectUrl;
           })
           .catch((error) => {
             console.error("Error writing document to Firestore:", error);
@@ -175,9 +192,12 @@ if (signIn) {
         localStorage.setItem('loggedInUserId', user.uid);
         console.log("User logged in with ID:", user.uid);
         
-        // Redirect to homepage
+        // Determine redirect URL based on email
+        const redirectUrl = getRedirectUrl(email);
+        
+        // Redirect to appropriate page
         setTimeout(() => {
-          window.location.href = 'homepage.html';
+          window.location.href = redirectUrl;
         }, 1000);
       })
       .catch((error) => {
