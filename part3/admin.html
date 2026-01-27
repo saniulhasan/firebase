@@ -98,6 +98,74 @@
                 padding: 20px;
                 color: #666;
             }
+            
+            /* Search and pagination styles */
+            .controls {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 20px 0;
+                padding: 15px;
+                background-color: #f8f9fa;
+                border-radius: 5px;
+            }
+            
+            .search-container {
+                flex: 1;
+                margin-right: 20px;
+            }
+            
+            .search-container input {
+                width: 100%;
+                padding: 10px 15px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 16px;
+            }
+            
+            .pagination-controls {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .pagination-btn {
+                padding: 8px 16px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+            
+            .pagination-btn:hover {
+                background-color: #45a049;
+            }
+            
+            .pagination-btn:disabled {
+                background-color: #cccccc;
+                cursor: not-allowed;
+            }
+            
+            .page-info {
+                font-size: 14px;
+                color: #666;
+                white-space: nowrap;
+            }
+            
+            .rows-per-page {
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            
+            .stats {
+                margin-top: 10px;
+                color: #666;
+                font-size: 14px;
+            }
         </style>
     </head>
     <body>
@@ -119,8 +187,45 @@
         <div id="message" class="message"></div>
         
         <h2>All Users</h2>
+        
+        <!-- Search and Pagination Controls -->
+        <div class="controls">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search by name or email...">
+            </div>
+            <div class="pagination-controls">
+                <select id="rowsPerPage" class="rows-per-page">
+                    <option value="5">5 per page</option>
+                    <option value="10" selected>10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+                <button id="prevPage" class="pagination-btn">Previous</button>
+                <span id="pageInfo" class="page-info">Page 1 of 1</span>
+                <button id="nextPage" class="pagination-btn">Next</button>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div id="stats" class="stats">
+            Showing 0 of 0 users
+        </div>
+        
+        <!-- Users Table Container -->
         <div id="usersTableContainer">
             <div class="loading">Loading users...</div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="controls" style="justify-content: center; margin-top: 20px;">
+            <div class="pagination-controls">
+                <button id="firstPage" class="pagination-btn">First</button>
+                <button id="prevPageBottom" class="pagination-btn">Previous</button>
+                <span id="pageInfoBottom" class="page-info">Page 1 of 1</span>
+                <button id="nextPageBottom" class="pagination-btn">Next</button>
+                <button id="lastPage" class="pagination-btn">Last</button>
+            </div>
         </div>
 
         <script type="module" src="./admin.js"></script>

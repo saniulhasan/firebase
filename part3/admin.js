@@ -35,6 +35,14 @@ const db = getFirestore(app);
 // Admin email configuration (must match the one in firebaseauth.js)
 const ADMIN_EMAIL = "saniulhasan23@gmail.com";
 
+// Pagination variables
+let allUsers = [];
+let filteredUsers = [];
+let currentPage = 1;
+let rowsPerPage = 5;
+let searchTerm = "";
+let totalPages = 1;
+
 // Function to show messages
 function showMessage(message, type = 'success') {
     const messageDiv = document.getElementById('message');
@@ -59,6 +67,7 @@ function isAdmin(userEmail) {
 async function loadAllUsers() {
     try {
         const usersTableContainer = document.getElementById('usersTableContainer');
+        usersTableContainer.innerHTML = '<div class="loading">Loading users...</div>';
         
         // Query all users from Firestore
         const usersRef = collection(db, "users");
@@ -66,74 +75,219 @@ async function loadAllUsers() {
         const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-            usersTableContainer.innerHTML = "<div class='loading'>No users found in the database.</div>";
+            allUsers = [];
+            filteredUsers = [];
+            renderTable();
+            updatePaginationControls();
             return;
         }
         
-        // Create table HTML
-        let tableHTML = `
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Email</th>
-                        <th>Provider</th>
-                        <th>Created At</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        let counter = 1;
+        // Convert to array
+        allUsers = [];
         querySnapshot.forEach((doc) => {
             const userData = doc.data();
             const userId = doc.id;
-            const createdAt = userData.createdAt ? 
-                new Date(userData.createdAt).toLocaleDateString() : 
-                'N/A';
-            
-            // Don't allow admin to delete themselves
-            const isCurrentUser = userId === auth.currentUser?.uid;
-            const isAdminUser = isAdmin(userData.email);
-            const deleteDisabled = isCurrentUser || isAdminUser;
-            
-            tableHTML += `
-                <tr>
-                    <td>${counter}</td>
-                    <td>${userData.firstName || 'N/A'}</td>
-                    <td>${userData.lastName || 'N/A'}</td>
-                    <td>${userData.email || 'N/A'}</td>
-                    <td>${userData.provider || 'email'}</td>
-                    <td>${createdAt}</td>
-                    <td>
-                        <button class="delete-btn" 
-                                data-userid="${userId}"
-                                data-email="${userData.email || ''}"
-                                ${deleteDisabled ? 'disabled' : ''}
-                                onclick="deleteUser('${userId}', '${userData.email || ''}')">
-                            ${deleteDisabled ? (isCurrentUser ? 'Current User' : 'Admin User') : 'Delete'}
-                        </button>
-                    </td>
-                </tr>
-            `;
-            counter++;
+            allUsers.push({
+                id: userId,
+                firstName: userData.firstName || '',
+                lastName: userData.lastName || '',
+                email: userData.email || '',
+                provider: userData.provider || 'email',
+                createdAt: userData.createdAt || null,
+                isAdmin: isAdmin(userData.email)
+            });
         });
         
-        tableHTML += `
-                </tbody>
-            </table>
-        `;
+        // Apply search filter
+        applySearchFilter();
         
-        usersTableContainer.innerHTML = tableHTML;
+        // Render table and update pagination
+        renderTable();
+        updatePaginationControls();
         
     } catch (error) {
         console.error("Error loading users:", error);
         document.getElementById('usersTableContainer').innerHTML = 
             `<div class="error">Error loading users: ${error.message}</div>`;
     }
+}
+
+// Apply search filter
+function applySearchFilter() {
+    if (!searchTerm.trim()) {
+        filteredUsers = [...allUsers];
+    } else {
+        const term = searchTerm.toLowerCase();
+        filteredUsers = allUsers.filter(user => 
+            (user.firstName && user.firstName.toLowerCase().includes(term)) ||
+            (user.lastName && user.lastName.toLowerCase().includes(term)) ||
+            (user.email && user.email.toLowerCase().includes(term))
+        );
+    }
+    
+    // Calculate total pages
+    totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages;
+    } else if (totalPages === 0) {
+        currentPage = 1;
+    }
+}
+
+// Render table with current page data
+function renderTable() {
+    const usersTableContainer = document.getElementById('usersTableContainer');
+    
+    if (filteredUsers.length === 0) {
+        usersTableContainer.innerHTML = `<div class="loading">${searchTerm ? 'No users found matching your search.' : 'No users found in the database.'}</div>`;
+        document.getElementById('stats').textContent = `Showing 0 of 0 users`;
+        return;
+    }
+    
+    // Calculate start and end indices
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = Math.min(startIndex + rowsPerPage, filteredUsers.length);
+    const currentUsers = filteredUsers.slice(startIndex, endIndex);
+    
+    // Create table HTML
+    let tableHTML = `
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Provider</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    currentUsers.forEach((user, index) => {
+        const userNumber = startIndex + index + 1;
+        const createdAt = user.createdAt ? 
+            new Date(user.createdAt).toLocaleDateString() : 
+            'N/A';
+        
+        // Don't allow admin to delete themselves or other admins
+        const isCurrentUser = user.id === auth.currentUser?.uid;
+        const deleteDisabled = isCurrentUser || user.isAdmin;
+        
+        tableHTML += `
+            <tr>
+                <td>${userNumber}</td>
+                <td>${user.firstName || 'N/A'}</td>
+                <td>${user.lastName || 'N/A'}</td>
+                <td>${user.email || 'N/A'}</td>
+                <td>${user.provider || 'email'}</td>
+                <td>${createdAt}</td>
+                <td>
+                    <button class="delete-btn" 
+                            data-userid="${user.id}"
+                            data-email="${user.email || ''}"
+                            ${deleteDisabled ? 'disabled' : ''}
+                            onclick="deleteUser('${user.id}', '${user.email || ''}')">
+                        ${deleteDisabled ? (isCurrentUser ? 'Current User' : 'Admin User') : 'Delete'}
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
+    
+    usersTableContainer.innerHTML = tableHTML;
+    
+    // Update stats
+    document.getElementById('stats').textContent = 
+        `Showing ${startIndex + 1}-${endIndex} of ${filteredUsers.length} users${searchTerm ? ' (filtered)' : ''}`;
+}
+
+// Update pagination controls
+function updatePaginationControls() {
+    // Update page info
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('pageInfoBottom').textContent = `Page ${currentPage} of ${totalPages}`;
+    
+    // Update button states
+    const prevButtons = document.querySelectorAll('#prevPage, #prevPageBottom');
+    const nextButtons = document.querySelectorAll('#nextPage, #nextPageBottom');
+    const firstButtons = document.querySelectorAll('#firstPage');
+    const lastButtons = document.querySelectorAll('#lastPage');
+    
+    prevButtons.forEach(btn => {
+        btn.disabled = currentPage === 1;
+    });
+    
+    nextButtons.forEach(btn => {
+        btn.disabled = currentPage === totalPages || totalPages === 0;
+    });
+    
+    firstButtons.forEach(btn => {
+        btn.disabled = currentPage === 1;
+    });
+    
+    lastButtons.forEach(btn => {
+        btn.disabled = currentPage === totalPages || totalPages === 0;
+    });
+}
+
+// Change page
+function changePage(newPage) {
+    if (newPage < 1 || newPage > totalPages) return;
+    
+    currentPage = newPage;
+    renderTable();
+    updatePaginationControls();
+}
+
+// Search functionality
+function setupSearch() {
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            searchTerm = e.target.value.trim();
+            currentPage = 1; // Reset to first page on search
+            applySearchFilter();
+            renderTable();
+            updatePaginationControls();
+        }, 300); // 300ms debounce delay
+    });
+}
+
+// Setup pagination controls
+function setupPagination() {
+    // Rows per page change
+    document.getElementById('rowsPerPage').addEventListener('change', (e) => {
+        rowsPerPage = parseInt(e.target.value);
+        currentPage = 1; // Reset to first page
+        totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+        renderTable();
+        updatePaginationControls();
+    });
+    
+    // Previous page buttons
+    document.getElementById('prevPage').addEventListener('click', () => changePage(currentPage - 1));
+    document.getElementById('prevPageBottom').addEventListener('click', () => changePage(currentPage - 1));
+    
+    // Next page buttons
+    document.getElementById('nextPage').addEventListener('click', () => changePage(currentPage + 1));
+    document.getElementById('nextPageBottom').addEventListener('click', () => changePage(currentPage + 1));
+    
+    // First page buttons
+    document.getElementById('firstPage').addEventListener('click', () => changePage(1));
+    
+    // Last page buttons
+    document.getElementById('lastPage').addEventListener('click', () => changePage(totalPages));
 }
 
 // Delete user function
@@ -164,7 +318,7 @@ async function deleteUser(userId, userEmail) {
         showMessage(`User ${userEmail} has been deleted successfully!`, 'success');
         
         // Refresh the users list
-        loadAllUsers();
+        await loadAllUsers();
         
     } catch (error) {
         console.error("Error deleting user:", error);
@@ -196,6 +350,10 @@ onAuthStateChanged(auth, (user) => {
         // User is admin, load their data and all users
         loadUserData(user.uid);
         loadAllUsers();
+        
+        // Setup search and pagination
+        setupSearch();
+        setupPagination();
         
     } else {
         // User is signed out
